@@ -27,25 +27,23 @@
 #         print(text.split("ASSISTANT:")[-1])
 
 import google.generativeai as genai
-import logging
 import ast
 import json
 from PIL import Image
 from constants import GEMINI_API_KEY
 
-logger = logging.getLogger(__name__)
-logger.addHandler(logging.FileHandler('logs.log'))
 genai.configure(api_key=GEMINI_API_KEY)
 
 def analyze_image(img: Image, dict_of_vars: dict):
     model = genai.GenerativeModel(model_name="gemini-1.5-flash")
     dict_of_vars_str = json.dumps(dict_of_vars, ensure_ascii=False)
     prompt = (
-        f"YOU CAN HAVE THREE TYPES OF EQUATIONS/EXPRESSIONS IN THIS IMAGE, AND ONLY ONE CASE SHALL APPLY EVERY TIME: "
+        f"YOU CAN HAVE FIVE TYPES OF EQUATIONS/EXPRESSIONS IN THIS IMAGE, AND ONLY ONE CASE SHALL APPLY EVERY TIME: "
         f"1. Simple mathematical expressions like 2+2, 3*4, 5/6, 7-8 etc. : This case, need to solve and return the answer in format as LIST OF ONE DICT [{{expr: given expression, result: calculated answer}}]"
         f"2. Set of Equations like x^2 + 2x + 1 = 0, 3y + 4x = 0, 5x^2 + 6y + 7 = 12 etc. : This case, need to solve for given variable, and format should be COMMA SEPARATED LIST OF DICTS, dict 1 as {{expr: x, result: 2, assign: True}}, and dict 2 as {{expr: y, result: 5, assign: True}} This example is assuming x was calculated as 2, and y as 5. Have as many dicts as vars"
         f"3. Assigning values to variables like x = 4, y = 5, z = 6 etc. : This case, you need to assign values to variables and return another key in dict called {{assign: True}}, and keep variable as expr and value as result in original dictionary. RETURN AS LIST OF DICTS"
-        f"4. Analyzing Graphical Math problems, like word problems represented in graphical form, for eg, cars colliding, trigonometric problem, pythagoras theorem problems etc., and return the answer in format as LIST OF ONE DICT [{{expr: given expression, result: calculated answer}}]"
+        f"4. Analyzing Graphical Math problems, like word problems represented in graphical form, for eg, cars colliding, trigonometric problem, pythagoras theorem problems, runs wagon wheel problems etc., these will have a drawing representing some scenario and accompanying information with image, PAY CLOSE ATTENTION TO DIFFERENT COLORS FOR THESE PROBLEMS. You need to return the answer in format as LIST OF ONE DICT [{{expr: given expression, result: calculated answer}}]"
+        f"5. Detecting Abstract Concepts that drawing might show, like love, hate, jealousy, patriotism, or a historic reference to war, invention, discovery, quote etc. USE SAME FORMAT AS OTHERS TO RETURN ANSWER, expression will be explanation of drawing, and result will be the abstract concept"
         f"Analyze the equation or expression in this image and return the answer acccording to given rules: "
         f"make sure to use extra backslashes for escape characters like \\f->\\\\f, \\n->\\\\n etc. "
         f"Here is a dictionary of user assigned variables, if given expression has any of these variables, "
@@ -54,13 +52,11 @@ def analyze_image(img: Image, dict_of_vars: dict):
         f"PROPERLY QUOTE THE KEYS AND VALUES IN THE DICTIONARY FOR EASIER PARSING WITH python's ast.literal_eval"
     )
     response = model.generate_content([prompt, img])
-    logging.info(f"Response from Gemini API: {response}\n")
     print(response.text)
     answers = []
     try:
         answers = ast.literal_eval(response.text)
     except Exception as e:
-        logging.error(f"Error in parsing response from Gemini API: {e}")
         print(f"Error in parsing response from Gemini API: {e}")
     print('returned answer ', answers)
     for answer in answers:

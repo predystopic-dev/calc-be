@@ -23,7 +23,7 @@ app.add_middleware(
 
 @app.get('/')
 async def root():
-    return {"message": "Hello World"}
+    return {"message": "Server is running"}
 
 app.include_router(calculator_router, prefix="/calculate", tags=["calculate"])
 

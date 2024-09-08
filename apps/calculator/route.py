@@ -13,7 +13,6 @@ async def run(data: ImageData):
     image_bytes = BytesIO(image_data)
     image = Image.open(image_bytes)
     responses = analyze_image(image, dict_of_vars=data.dict_of_vars)
-    image.show()
     data = []
     for response in responses:
         data.append(response)
